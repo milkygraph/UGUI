@@ -1,4 +1,4 @@
-#include "Application.hpp"
+#include "Application.h"
 #include "raylib.h"
 
 #if defined(PLATFORM_WEB)
@@ -13,12 +13,17 @@ void UpdateDrawFrame(void) {
 
 Application::Application() {
     app = this;
-    InitWindow(m_window_width, m_window_height, m_window_title);
-    m_gui = new GUI();
+	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    InitWindow(m_WindowWidth, m_WindowHeight, m_window_title);
+	m_GUI = new GUI();
+	m_RenderTexture = LoadRenderTexture(m_WindowWidth, m_WindowHeight);
+
+	GUI::SubscribeViewportResize([this](ImVec2 size) { this->OnViewportResize(size); });
 }
 
 Application::~Application() {
-    delete m_gui;
+    delete m_GUI;
+	UnloadRenderTexture(m_RenderTexture);
     CloseWindow();
 }
 
@@ -35,13 +40,21 @@ void Application::Run() const {
 
 void Application::Update() const {
     BeginDrawing();
-
+	BeginTextureMode(m_RenderTexture);
     ClearBackground(RAYWHITE);
+    app->m_GUI->Begin();
 
-    app->m_gui->Begin();
+	// Render part
+	{
+		DrawText("Hello, world!", 10, 10, 20, DARKGRAY);
+	}
 
-    DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
-
-    app->m_gui->End();
+	EndTextureMode();
+	app->m_GUI->End(m_RenderTexture);
     EndDrawing();
+}
+
+void Application::OnViewportResize(ImVec2 size) {
+	UnloadTexture(m_RenderTexture.texture);
+	m_RenderTexture = LoadRenderTexture(size.x, size.y);
 }

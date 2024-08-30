@@ -1,7 +1,31 @@
-#include "GUI.hpp"
+#include "GUI.h"
+
+#include <utility>
 #include "imgui.h"
 #include "imgui_impl_raylib.h"
-#include "rlImGui.h"
+
+char* imgui_ini = nullptr;
+
+#if defined(PLATFORM_WEB)
+#include <stdio.h>
+#include <string.h>
+#include <emscripten/fetch.h>
+#include <memory>
+
+void downloadSucceeded(emscripten_fetch_t *fetch) {
+	printf("Finished downloading %llu bytes from URL %s.\n", fetch->numBytes, fetch->url);
+	imgui_ini = (char*)malloc(fetch->numBytes + 1);
+	memcpy(imgui_ini, fetch->data, fetch->numBytes);
+	// The data is now available at fetch->data[0] through fetch->data[fetch->numBytes-1];
+	emscripten_fetch_close(fetch); // Free data associated with the fetch.
+}
+
+void downloadFailed(emscripten_fetch_t *fetch) {
+	printf("Downloading %s failed, HTTP failure status code: %d.\n", fetch->url, fetch->status);
+	emscripten_fetch_close(fetch); // Also free data on failure.
+}
+
+#endif
 
 GUI::GUI() {
 	// Initialize imgui
@@ -13,9 +37,24 @@ GUI::GUI() {
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
 
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
+
+	// Load ini file
+#if defined(PLATFORM_WEB)
+	emscripten_fetch_attr_t attr;
+	emscripten_fetch_attr_init(&attr);
+	strcpy(attr.requestMethod, "GET");
+	attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+	attr.onsuccess = downloadSucceeded;
+	attr.onerror = downloadFailed;
+	emscripten_fetch(&attr, "imgui.ini");
+	ImGui::LoadIniSettingsFromMemory(imgui_ini, strlen(imgui_ini));
+#else
+	ImGui::LoadIniSettingsFromDisk("imgui.ini");
+#endif
 }
 
 
@@ -25,15 +64,32 @@ GUI::~GUI() {
 }
 
 
-void GUI::Begin() const{
+void GUI::Begin() {
 	ImGui_ImplRaylib_NewFrame();
 	ImGui_ImplRaylib_ProcessEvents();
 	ImGui::NewFrame();
+	ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 	ImGui::ShowDemoWindow();
 }
 
 
-void GUI::End() const{
+void GUI::End(RenderTexture2D texture) {
+	// Render the viewport texture to a viewport window
+	ImGui::Begin("Viewport");
+	ImVec2 size = ImGui::GetContentRegionAvail();
+
+	if (size.x != m_ViewportSize.x || size.y != m_ViewportSize.y) {
+		m_ViewportSize = size;
+		m_ViewportResizeAction.Trigger(m_ViewportSize);
+	}
+
+	ImGui::Image(&texture.texture, m_ViewportSize, {0, 1 }, {1, 0 });
+	ImGui::End();
 	ImGui::Render();
 	ImGui_ImplRaylib_RenderDrawData(ImGui::GetDrawData());
+}
+
+
+void GUI::SubscribeViewportResize(std::function<void(ImVec2)> func) {
+	m_ViewportResizeAction.Subscribe(std::move(func));
 }
