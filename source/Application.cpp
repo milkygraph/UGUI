@@ -1,31 +1,47 @@
 #include "Application.hpp"
 #include "raylib.h"
 
+#if defined(PLATFORM_WEB)
+#include <emscripten/emscripten.h>
+#endif
+
+static Application* app = nullptr;
+
+void UpdateDrawFrame(void) {
+	app->Update();
+}
 
 Application::Application() {
-	InitWindow(m_window_width, m_window_height, m_window_title);
-
-	SetTargetFPS(60);
-
-	m_gui = new GUI();
+    app = this;
+    InitWindow(m_window_width, m_window_height, m_window_title);
+    m_gui = new GUI();
 }
 
 Application::~Application() {
-	delete m_gui;
-	CloseWindow();
+    delete m_gui;
+    CloseWindow();
 }
 
 void Application::Run() const {
-	while (!WindowShouldClose()) {
-		BeginDrawing();
+#if defined(PLATFORM_WEB)
+    emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
+#else
+    SetTargetFPS(60);
+    while (!WindowShouldClose()) {
+        Update();
+    }
+#endif
+}
 
-		ClearBackground(RAYWHITE);
+void Application::Update() const {
+    BeginDrawing();
 
-		m_gui->Begin();
+    ClearBackground(RAYWHITE);
 
-		DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
+    app->m_gui->Begin();
 
-		m_gui->End();
-		EndDrawing();
-	}
+    DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
+
+    app->m_gui->End();
+    EndDrawing();
 }

@@ -40,6 +40,10 @@
 #include <cstdint>
 #include "imgui_internal.h"
 
+#if defined(PLATFORM_WEB)
+#include <emscripten/emscripten.h>
+#endif
+
 #ifndef NO_FONT_AWESOME
 #include "extras/FA6FreeSolidFontData.h"
 #endif
@@ -102,8 +106,16 @@ static void ImGuiNewFrame(float deltaTime)
 {
 	ImGuiIO& io = ImGui::GetIO();
 
-
+#if defined(PLATFORM_WEB)
+	Vector2 resolutionScale = Vector2{ 1,1 };
+	double dpi = emscripten_get_device_pixel_ratio();
+	resolutionScale.x = dpi;
+	resolutionScale.y = dpi;
+#else
 	Vector2 resolutionScale = GetWindowScaleDPI();
+#endif
+	printf("DPI: %f %f\n", resolutionScale.x, resolutionScale.y);
+
 
 #ifndef PLATFORM_DRM
 	if (IsWindowFullscreen())
