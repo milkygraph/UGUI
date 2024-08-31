@@ -5,17 +5,14 @@
 #include <emscripten/emscripten.h>
 #endif
 
+static Application  *app;
+
 void UpdateDrawFrame(void) {
 	app->Update();
 }
 
 Application::Application() {
-	if (s_Instance == nullptr)
-		s_Instance = this;
-	else{
-
-		return;
-	}
+	app = this;
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(m_WindowWidth, m_WindowHeight, m_window_title);
 	m_GUI = new GUI();

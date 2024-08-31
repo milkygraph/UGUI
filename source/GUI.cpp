@@ -97,7 +97,7 @@ void GUI::End(RenderTexture2D texture) {
 		m_ViewportResizeAction.Trigger(m_ViewportSize);
 	}
 
-	ImGui::Image(&Application::GetRenderTexture().texture, m_ViewportSize, {0, 1 }, {1, 0 });
+	ImGui::Image(&texture.texture, m_ViewportSize, {0, 1 }, {1, 0 });
 	ImGui::End();
 	ImGui::Render();
 	ImGui_ImplRaylib_RenderDrawData(ImGui::GetDrawData());

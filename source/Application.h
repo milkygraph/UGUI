@@ -21,5 +21,3 @@ private:
 	const char* m_window_title = "GYAT";
 	RenderTexture2D m_RenderTexture;
 };
-
-extern Application  *app;
