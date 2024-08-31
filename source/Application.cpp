@@ -5,17 +5,21 @@
 #include <emscripten/emscripten.h>
 #endif
 
-static Application* app = nullptr;
-
 void UpdateDrawFrame(void) {
 	app->Update();
 }
 
 Application::Application() {
-    app = this;
+	if (s_Instance == nullptr)
+		s_Instance = this;
+	else{
+
+		return;
+	}
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(m_WindowWidth, m_WindowHeight, m_window_title);
 	m_GUI = new GUI();
+	m_GUI->Init();
 	m_RenderTexture = LoadRenderTexture(m_WindowWidth, m_WindowHeight);
 
 	GUI::SubscribeViewportResize([this](ImVec2 size) { this->OnViewportResize(size); });

@@ -1,8 +1,8 @@
 #include "GUI.h"
 
-#include <utility>
 #include "imgui.h"
 #include "imgui_impl_raylib.h"
+#include "Application.h"
 
 char* imgui_ini = nullptr;
 
@@ -24,11 +24,11 @@ void downloadFailed(emscripten_fetch_t *fetch) {
 	printf("Downloading %s failed, HTTP failure status code: %d.\n", fetch->url, fetch->status);
 	emscripten_fetch_close(fetch); // Also free data on failure.
 }
-
 #endif
 
-GUI::GUI() {
-	// Initialize imgui
+GUI::GUI() {}
+
+void GUI::Init() {// Initialize imgui
 	IMGUI_CHECKVERSION();
 
 	ImGui::CreateContext();
@@ -55,6 +55,12 @@ GUI::GUI() {
 #else
 	ImGui::LoadIniSettingsFromDisk("imgui.ini");
 #endif
+
+	GUIWindow viewportWindow("ViewportTest");
+	viewportWindow.SetUpdateFunction([]() {
+		ImGui::Text("Hello, world!");
+	});
+	m_Windows.push_back(viewportWindow);
 }
 
 
@@ -70,10 +76,18 @@ void GUI::Begin() {
 	ImGui::NewFrame();
 	ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 	ImGui::ShowDemoWindow();
+
+	for (auto& window : m_Windows){
+		window.Begin();
+		window.Update();
+	}
 }
 
 
 void GUI::End(RenderTexture2D texture) {
+	for (auto& window : m_Windows)
+		window.End();
+
 	// Render the viewport texture to a viewport window
 	ImGui::Begin("Viewport");
 	ImVec2 size = ImGui::GetContentRegionAvail();
@@ -83,7 +97,7 @@ void GUI::End(RenderTexture2D texture) {
 		m_ViewportResizeAction.Trigger(m_ViewportSize);
 	}
 
-	ImGui::Image(&texture.texture, m_ViewportSize, {0, 1 }, {1, 0 });
+	ImGui::Image(&Application::GetRenderTexture().texture, m_ViewportSize, {0, 1 }, {1, 0 });
 	ImGui::End();
 	ImGui::Render();
 	ImGui_ImplRaylib_RenderDrawData(ImGui::GetDrawData());
