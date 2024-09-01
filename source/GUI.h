@@ -7,9 +7,10 @@
 
 class GUI {
 public:
-	GUI();
-	~GUI();
+	GUI() = default;
+	~GUI() = default;
 	void Init();
+	void Shutdown();
 	void Begin();
 	void End(RenderTexture2D texture);
 	static void SubscribeViewportResize(std::function<void(ImVec2)> func);

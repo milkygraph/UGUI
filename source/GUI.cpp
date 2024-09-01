@@ -26,8 +26,6 @@ void downloadFailed(emscripten_fetch_t *fetch) {
 }
 #endif
 
-GUI::GUI() {}
-
 void GUI::Init() {// Initialize imgui
 	IMGUI_CHECKVERSION();
 
@@ -57,14 +55,21 @@ void GUI::Init() {// Initialize imgui
 #endif
 
 	GUIWindow viewportWindow("ViewportTest");
-	viewportWindow.SetUpdateFunction([]() {
-		ImGui::Text("Hello, world!");
+	viewportWindow.SetUpdateFunction([&]() {
+		ImVec2 size = ImGui::GetContentRegionAvail();
+
+		if (size.x != m_ViewportSize.x || size.y != m_ViewportSize.y) {
+			m_ViewportSize = size;
+			m_ViewportResizeAction.Trigger(m_ViewportSize);
+		}
+
+		ImGui::Image(&Application::GetRenderTexture().texture, m_ViewportSize, {0, 1 }, {1, 0 });
 	});
 	m_Windows.push_back(viewportWindow);
 }
 
 
-GUI::~GUI() {
+void GUI::Shutdown() {
 	// Shutdown imgui
 	ImGui_ImplRaylib_Shutdown();
 }
@@ -88,17 +93,6 @@ void GUI::End(RenderTexture2D texture) {
 	for (auto& window : m_Windows)
 		window.End();
 
-	// Render the viewport texture to a viewport window
-	ImGui::Begin("Viewport");
-	ImVec2 size = ImGui::GetContentRegionAvail();
-
-	if (size.x != m_ViewportSize.x || size.y != m_ViewportSize.y) {
-		m_ViewportSize = size;
-		m_ViewportResizeAction.Trigger(m_ViewportSize);
-	}
-
-	ImGui::Image(&texture.texture, m_ViewportSize, {0, 1 }, {1, 0 });
-	ImGui::End();
 	ImGui::Render();
 	ImGui_ImplRaylib_RenderDrawData(ImGui::GetDrawData());
 }

@@ -11,7 +11,8 @@ public:
 	void Update() const;
 	void OnViewportResize(ImVec2);
 
-	static RenderTexture2D GetRenderTexture() { return s_Instance->m_RenderTexture; }
+	static Application& GetInstance() { return *s_Instance; }
+	static RenderTexture2D& GetRenderTexture() { return s_Instance->m_RenderTexture; }
 
 private:
 	static inline Application* s_Instance = nullptr;

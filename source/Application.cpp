@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include "Application.h"
 #include "raylib.h"
 
@@ -5,14 +6,15 @@
 #include <emscripten/emscripten.h>
 #endif
 
-static Application  *app;
-
 void UpdateDrawFrame(void) {
-	app->Update();
+	Application::GetInstance().Update();
 }
 
 Application::Application() {
-	app = this;
+	if (s_Instance)
+		throw std::runtime_error("Application already exists");
+	s_Instance = this;
+
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(m_WindowWidth, m_WindowHeight, m_window_title);
 	m_GUI = new GUI();
@@ -43,7 +45,7 @@ void Application::Update() const {
     BeginDrawing();
 	BeginTextureMode(m_RenderTexture);
     ClearBackground(RAYWHITE);
-    app->m_GUI->Begin();
+    m_GUI->Begin();
 
 	// Render part
 	{
@@ -51,7 +53,7 @@ void Application::Update() const {
 	}
 
 	EndTextureMode();
-	app->m_GUI->End(m_RenderTexture);
+	m_GUI->End(m_RenderTexture);
     EndDrawing();
 }
 
