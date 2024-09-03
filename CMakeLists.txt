@@ -55,11 +55,6 @@ file(GLOB IMGUI_SOURCE_FILES
         ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp)
 include_directories(${PROJECT_NAME} PUBLIC ${imgui_SOURCE_DIR})
 
-get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-foreach(dir ${dirs})
-    message(STATUS "dir='${dir}'")
-endforeach()
-
 # Application source files
 file(GLOB SRC_FILES  source/*.cpp source/*.h)
 
