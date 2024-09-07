@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 #include "imgui_impl_raylib.h"
+#include "raylib.h"
 #include "Application.h"
 
 char* imgui_ini = nullptr;
@@ -89,7 +90,7 @@ void GUI::Begin() {
 }
 
 
-void GUI::End(RenderTexture2D texture) {
+void GUI::End() {
 	for (auto& window : m_Windows)
 		window.End();
 
