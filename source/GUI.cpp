@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 #include "imgui_impl_raylib.h"
+#include "raylib.h"
 #include "Application.h"
 
 char* imgui_ini = nullptr;
@@ -66,6 +67,13 @@ void GUI::Init() {// Initialize imgui
 		ImGui::Image(&Application::GetRenderTexture().texture, m_ViewportSize, {0, 1 }, {1, 0 });
 	});
 	m_Windows.push_back(viewportWindow);
+
+	// Debug window
+	GUIWindow debugWindow("Debug");
+	debugWindow.SetUpdateFunction([](){
+		ImGui::Text("FPS: %d", GetFPS());
+	});
+	m_Windows.push_back(debugWindow);
 }
 
 
@@ -80,7 +88,6 @@ void GUI::Begin() {
 	ImGui_ImplRaylib_ProcessEvents();
 	ImGui::NewFrame();
 	ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
-	ImGui::ShowDemoWindow();
 
 	for (auto& window : m_Windows){
 		window.Begin();
@@ -89,7 +96,7 @@ void GUI::Begin() {
 }
 
 
-void GUI::End(RenderTexture2D texture) {
+void GUI::End() {
 	for (auto& window : m_Windows)
 		window.End();
 

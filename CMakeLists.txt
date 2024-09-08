@@ -55,13 +55,17 @@ file(GLOB IMGUI_SOURCE_FILES
         ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp)
 include_directories(${PROJECT_NAME} PUBLIC ${imgui_SOURCE_DIR})
 
+# OpenCV
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
 # Application source files
 file(GLOB SRC_FILES  source/*.cpp source/*.h)
 
 # Create executable
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${IMGUI_SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} raylib)
-target_include_directories(${PROJECT_NAME} PUBLIC ${imgui_SOURCE_DIR})
+target_link_libraries(${PROJECT_NAME} raylib ${OpenCV_LIBS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${imgui_SOURCE_DIR} ${OpenCV_INCLUDE_DIRS})
 
 # Web Configurations
 if (${PLATFORM} STREQUAL "Web")
