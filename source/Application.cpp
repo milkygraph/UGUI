@@ -1,34 +1,11 @@
 #include <stdexcept>
 #include "Application.h"
 #include "raylib.h"
+#include "Webcam.hpp"
 
 #if defined(PLATFORM_WEB)
 #include <emscripten/emscripten.h>
 #endif
-
-Image MatToRaylibImage(const cv::Mat& mat) {
-	int width = mat.cols;
-	int height = mat.rows;
-	int channels = mat.channels();
-
-	// Convert OpenCV BGR format to raylib's RGB format
-	cv::Mat mat_rgb;
-	cv::cvtColor(mat, mat_rgb, cv::COLOR_BGR2RGB);
-
-	// Allocate the raylib Image
-	Image image = {
-			.data = (void*)RL_MALLOC(width * height * channels),
-			.width = width,
-			.height = height,
-			.mipmaps = 1,
-			.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8
-	};
-
-	// Copy data from OpenCV Mat to raylib Image
-	memcpy(image.data, mat_rgb.data, width * height * channels);
-
-	return image;
-}
 
 
 void UpdateDrawFrame(void) {
@@ -42,13 +19,23 @@ Application::Application() {
 
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(m_WindowWidth, m_WindowHeight, m_window_title);
+	SetTargetFPS(60);
 	m_GUI.Init();
 	m_RenderTexture = LoadRenderTexture(m_WindowWidth, m_WindowHeight);
 
 	GUI::SubscribeViewportResize([this](ImVec2 size) { this->OnViewportResize(size); });
+
+#if defined(PLATFORM_WEB)
+	// TODO: ADD VIDEO SOURCE FOR WEB
+#else
+	m_VideoSource = std::make_unique<Webcam>();
+#endif
+
+	m_VideoSource->StartCapture();
 }
 
 Application::~Application() {
+	m_VideoSource->StopCapture();
 	m_GUI.Shutdown();
 	UnloadRenderTexture(m_RenderTexture);
     CloseWindow();
@@ -73,32 +60,12 @@ void Application::Update() {
 
 	// Render part
 	{
-		static cv::VideoCapture cap(0);
-		static cv::Mat frame;
-		static int frameCounter = 0;
-		static Image webcamImage;
-		static Texture2D webcamTexture;
-
-		frameCounter++;
-		if (frameCounter % 5 == 0 || frameCounter == 1) {
-			cap >> frame;
-			if (!frame.empty()) {
-				// Flip the image
-				cv::flip(frame, frame, 1);
-				webcamImage = MatToRaylibImage(frame);
-				if (webcamTexture.id == 0)
-					webcamTexture = LoadTextureFromImage(webcamImage);
-				UpdateTexture(webcamTexture, webcamImage.data);
-				UnloadImage(webcamImage);
-			}
-		}
-
+		Texture2D webcamTexture = m_VideoSource->GetTexture();
 		DrawTexture(
 				webcamTexture,
 				0, 0,
 				WHITE
 		);
-
 	}
 
 	EndTextureMode();

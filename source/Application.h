@@ -1,6 +1,7 @@
 #pragma once
 #include "GUI.h"
 #include "raylib.h"
+#include "VideoSource.hpp"
 
 
 class Application {
@@ -15,9 +16,6 @@ public:
 	static RenderTexture2D& GetRenderTexture() { return s_Instance->m_RenderTexture; }
 
 private:
-	void UpdateWebcam();
-	void UpdateWebcamTexture();
-
 	static inline Application* s_Instance = nullptr;
 	GUI m_GUI;
     const int m_WindowWidth = 800;
@@ -25,8 +23,5 @@ private:
 	const char* m_window_title = "GYAT";
 	RenderTexture2D m_RenderTexture;
 
-	cv::VideoCapture cap;
-	cv::Mat frame;
-	Image webcamImage;
-	Texture2D webcamTexture;
+	std::unique_ptr<VideoSource> m_VideoSource;
 };
