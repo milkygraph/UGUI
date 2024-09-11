@@ -56,6 +56,9 @@ file(GLOB IMGUI_SOURCE_FILES
 include_directories(${PROJECT_NAME} PUBLIC ${imgui_SOURCE_DIR})
 
 # OpenCV
+# third party OpenCV cause opencv is not compatible with mingw (hard coded path)
+set(OpenCV_DIR "C:/Users/kamal/OpenCV_mingw")
+
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
@@ -79,3 +82,5 @@ if (APPLE)
     target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
     target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
 endif()
+
+# set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
