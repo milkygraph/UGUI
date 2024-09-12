@@ -57,7 +57,6 @@ include_directories(${PROJECT_NAME} PUBLIC ${imgui_SOURCE_DIR})
 
 # OpenCV
 # third party OpenCV cause opencv is not compatible with mingw (hard coded path)
-set(OpenCV_DIR "C:/Users/kamal/OpenCV_mingw")
 
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
@@ -66,7 +65,8 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 file(GLOB SRC_FILES  source/*.cpp source/*.h)
 
 # Create executable
-add_executable(${PROJECT_NAME} ${SRC_FILES} ${IMGUI_SOURCE_FILES})
+add_executable(${PROJECT_NAME} ${SRC_FILES} ${IMGUI_SOURCE_FILES}
+        source/module.hpp)
 target_link_libraries(${PROJECT_NAME} raylib ${OpenCV_LIBS})
 target_include_directories(${PROJECT_NAME} PUBLIC ${imgui_SOURCE_DIR} ${OpenCV_INCLUDE_DIRS})
 
