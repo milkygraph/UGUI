@@ -16,7 +16,6 @@ public:
 
 private:
 	cv::VideoCapture m_Capture;
-	cv::Mat m_Frame;
 
 	std::atomic<bool> m_Capturing = false;
 	std::atomic<bool> m_NewFrameAvailable = false;

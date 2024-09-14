@@ -72,6 +72,12 @@ void GUI::Init() {// Initialize imgui
 	GUIWindow debugWindow("Debug");
 	debugWindow.SetUpdateFunction([](){
 		ImGui::Text("FPS: %d", GetFPS());
+		if (ImGui::Button("Predict")){
+			Application::GetInstance().Predict();
+		}
+
+		ImGui::Text("Model Output: ");
+		ImGui::Text(Application::GetInstance().model_output.c_str());
 	});
 	m_Windows.push_back(debugWindow);
 }

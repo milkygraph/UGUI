@@ -59,12 +59,29 @@ include_directories(${PROJECT_NAME} PUBLIC ${imgui_SOURCE_DIR})
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
+# LibTorch
+find_package(Torch QUIET)
+if (NOT Torch_FOUND)
+    FetchContent_Declare(
+            libtorch
+            URL https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.4.1%2Bcpu.zip
+    )
+    FetchContent_GetProperties(libtorch)
+    if (NOT libtorch_POPULATED)
+        set(FETCHCONTENT_QUIET NO)
+        FetchContent_MakeAvailable(libtorch)
+    endif()
+    include_directories(${libtorch_SOURCE_DIR}/include)
+    file(GLOB_RECURSE TORCH_LIBRARIES "${libtorch_SOURCE_DIR}/lib/*.so")
+endif ()
+
+
 # Application source files
 file(GLOB SRC_FILES  source/*.cpp source/*.h)
 
 # Create executable
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${IMGUI_SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} raylib ${OpenCV_LIBS})
+target_link_libraries(${PROJECT_NAME} raylib ${OpenCV_LIBS} ${TORCH_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${imgui_SOURCE_DIR} ${OpenCV_INCLUDE_DIRS})
 
 # Web Configurations
