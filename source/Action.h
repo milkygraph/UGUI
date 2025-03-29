@@ -12,9 +12,6 @@ public:
 	}
 
 	void Trigger(Args... args) {
-		if (strcmp(m_Name, "") != 0)
-			TraceLog(LOG_INFO, "Triggering action %s", m_Name);
-
 		for (auto& subscriber : m_Subscribers) {
 			subscriber(args...);
 		}
