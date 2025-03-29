@@ -1,8 +1,10 @@
 #include "GUI.h"
 
+#include "GUIWindow.hpp"
 #include "imgui.h"
 #include "imgui_impl_raylib.h"
 #include "Application.h"
+#include <LuaCpp.hpp>
 
 char* imgui_ini = nullptr;
 
@@ -54,7 +56,7 @@ void GUI::Init() {// Initialize imgui
 	ImGui::LoadIniSettingsFromDisk("imgui.ini");
 #endif
 
-	GUIWindow viewportWindow("ViewportTest");
+	GUIWindow viewportWindow("SADKJADAKLDS");
 	viewportWindow.SetUpdateFunction([&]() {
 		ImVec2 size = ImGui::GetContentRegionAvail();
 
@@ -66,6 +68,14 @@ void GUI::Init() {// Initialize imgui
 		ImGui::Image(&Application::GetRenderTexture().texture, m_ViewportSize, {0, 1 }, {1, 0 });
 	});
 	m_Windows.push_back(viewportWindow);
+
+    GUIWindow luaStuff("LuaTest");
+    luaStuff.SetUpdateFunction([&](){
+        if(ImGui::Button("Print")){
+            Application::GetInstance().Lua("print('The fastest way to start using lua in a project')");
+        }
+    });
+	m_Windows.push_back(luaStuff);
 }
 
 
