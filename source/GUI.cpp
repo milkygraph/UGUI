@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include "imgui_impl_raylib.h"
 #include "Application.h"
+#include "imgui_internal.h"
 #include <LuaCpp.hpp>
 
 char* imgui_ini = nullptr;
@@ -12,99 +13,107 @@ char* imgui_ini = nullptr;
 #include <stdio.h>
 #include <string.h>
 #include <emscripten/fetch.h>
-#include <memory>
 
 void downloadSucceeded(emscripten_fetch_t *fetch) {
-	printf("Finished downloading %llu bytes from URL %s.\n", fetch->numBytes, fetch->url);
-	imgui_ini = (char*)malloc(fetch->numBytes + 1);
-	memcpy(imgui_ini, fetch->data, fetch->numBytes);
-	// The data is now available at fetch->data[0] through fetch->data[fetch->numBytes-1];
-	emscripten_fetch_close(fetch); // Free data associated with the fetch.
+    printf("Finished downloading %llu bytes from URL %s.\n", fetch->numBytes, fetch->url);
+    imgui_ini = (char*)malloc(fetch->numBytes + 1);
+    memcpy(imgui_ini, fetch->data, fetch->numBytes);
+    // The data is now available at fetch->data[0] through fetch->data[fetch->numBytes-1];
+    emscripten_fetch_close(fetch); // Free data associated with the fetch.
 }
 
 void downloadFailed(emscripten_fetch_t *fetch) {
-	printf("Downloading %s failed, HTTP failure status code: %d.\n", fetch->url, fetch->status);
-	emscripten_fetch_close(fetch); // Also free data on failure.
+    printf("Downloading %s failed, HTTP failure status code: %d.\n", fetch->url, fetch->status);
+    emscripten_fetch_close(fetch); // Also free data on failure.
 }
 #endif
 
-void GUI::Init() {// Initialize imgui
-	IMGUI_CHECKVERSION();
 
-	ImGui::CreateContext();
-	ImGui_ImplRaylib_Init();
-	Imgui_ImplRaylib_BuildFontAtlas();
-	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+void GUI::Init() { // Initialize imgui
+    IMGUI_CHECKVERSION();
 
-	// Setup Dear ImGui style
-	ImGui::StyleColorsDark();
+    ImGui::CreateContext();
+    ImGui_ImplRaylib_Init();
+    Imgui_ImplRaylib_BuildFontAtlas();
+    ImGuiIO &io = ImGui::GetIO();
+    io.ConfigFlags |=
+        ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    io.ConfigFlags |=
+        ImGuiConfigFlags_NavEnableGamepad;            // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
 
-	// Load ini file
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+
+    // Load ini file
 #if defined(PLATFORM_WEB)
-	emscripten_fetch_attr_t attr;
-	emscripten_fetch_attr_init(&attr);
-	strcpy(attr.requestMethod, "GET");
-	attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
-	attr.onsuccess = downloadSucceeded;
-	attr.onerror = downloadFailed;
-	emscripten_fetch(&attr, "imgui.ini");
-	ImGui::LoadIniSettingsFromMemory(imgui_ini, strlen(imgui_ini));
+    emscripten_fetch_attr_t attr;
+    emscripten_fetch_attr_init(&attr);
+    strcpy(attr.requestMethod, "GET");
+    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+    attr.onsuccess = downloadSucceeded;
+    attr.onerror = downloadFailed;
+    emscripten_fetch(&attr, "imgui.ini");
+    ImGui::LoadIniSettingsFromMemory(imgui_ini, strlen(imgui_ini));
 #else
-	ImGui::LoadIniSettingsFromDisk("imgui.ini");
+    ImGui::LoadIniSettingsFromDisk("imgui.ini");
 #endif
 
-	GUIWindow viewportWindow("SADKJADAKLDS");
-	viewportWindow.SetUpdateFunction([&]() {
-		ImVec2 size = ImGui::GetContentRegionAvail();
+    InitWindows();
+}
 
-		if (size.x != m_ViewportSize.x || size.y != m_ViewportSize.y) {
-			m_ViewportSize = size;
-			m_ViewportResizeAction.Trigger(m_ViewportSize);
-		}
 
-		ImGui::Image(&Application::GetRenderTexture().texture, m_ViewportSize, {0, 1 }, {1, 0 });
-	});
-	m_Windows.push_back(viewportWindow);
+// Initializes first windows
+void GUI::InitWindows() {
+    // Main Viewport for Raylib
+    GUIWindow viewportWindow("ViewPort");
+    viewportWindow.SetUpdateFunction([&]() {
+        ImVec2 size = ImGui::GetContentRegionAvail();
 
-    GUIWindow luaStuff("LuaTest");
-    luaStuff.SetUpdateFunction([&](){
-        if(ImGui::Button("Print")){
-            Application::GetInstance().Lua("print('The fastest way to start using lua in a project')");
+        if (size.x != m_ViewportSize.x || size.y != m_ViewportSize.y) {
+            m_ViewportSize = size;
+            m_ViewportResizeAction.Trigger(m_ViewportSize);
         }
+
+        ImGui::Image(&Application::GetRenderTexture().texture, m_ViewportSize,
+                     {0, 1}, {1, 0});
     });
-	m_Windows.push_back(luaStuff);
+    m_Windows.push_back(viewportWindow);
+
+    GUIWindow dockspaceWindow("Dockspace", 
+                              ImGuiWindowFlags_NoResize |
+                              ImGuiWindowFlags_NoMove |
+                              ImGuiWindowFlags_NoDecoration);
+    m_Windows.push_back(dockspaceWindow);
 }
 
 
 void GUI::Shutdown() {
-	// Shutdown imgui
-	ImGui_ImplRaylib_Shutdown();
+    // Shutdown imgui
+    ImGui_ImplRaylib_Shutdown();
 }
 
 
 void GUI::Begin() {
-	ImGui_ImplRaylib_NewFrame();
-	ImGui_ImplRaylib_ProcessEvents();
-	ImGui::NewFrame();
-	ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
-	ImGui::ShowDemoWindow();
+    ImGui_ImplRaylib_NewFrame();
+    ImGui_ImplRaylib_ProcessEvents();
+    ImGui::NewFrame();
+    ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
+    ImGui::ShowDemoWindow();
 
-	for (auto& window : m_Windows){
-		window.Begin();
-		window.Update();
-	}
+    for (auto& window : m_Windows){
+        window.Begin();
+        window.Update();
+    }
 }
 
 
 void GUI::End(RenderTexture2D texture) {
-	for (auto& window : m_Windows)
-		window.End();
+    for (auto& window : m_Windows)
+        window.End();
 
-	ImGui::Render();
-	ImGui_ImplRaylib_RenderDrawData(ImGui::GetDrawData());
+    ImGui::Render();
+    ImGui_ImplRaylib_RenderDrawData(ImGui::GetDrawData());
 }
 
 

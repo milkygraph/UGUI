@@ -60,7 +60,3 @@ void Application::OnViewportResize(ImVec2 size) {
     UnloadTexture(m_RenderTexture.texture);
     m_RenderTexture = LoadRenderTexture(size.x, size.y);
 }
-
-void Application::Lua(const char* code) {
-    lua.CompileStringAndRun(code);
-}

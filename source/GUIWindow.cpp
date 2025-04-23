@@ -3,7 +3,7 @@
 
 
 void GUIWindow::Begin() {
-	ImGui::Begin(m_Name);
+	ImGui::Begin(m_Name, NULL, m_Flags);
 }
 
 void GUIWindow::End() {
